@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="d4c7adea-5291-46e2-8198-80c3ca3e45f1">
+		<http:listener-connection host="${http.host}" port="${http.port}" />
+	</http:listener-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="31432f69-5393-4721-bb50-bc19a1db419e" file="${mule.env}.properties" />
+	<global-property doc:name="Global Property" doc:id="7eaf5407-2de7-4b8c-9a1d-922526ed46c4" name="mule.env" value="Dev" />
+	<sub-flow name="Private-Flow" doc:id="6b279711-0819-4e2d-8ab4-0cbdf7c1576e" >
+		<ee:transform doc:name="Transform Message" doc:id="70d578f1-214c-4c6f-b69f-d282b58a8885">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output text/plain
+---
+p("Greeting") ++ " : " ++ (vars.Name default "") ++ " You are a " ++ (vars.Role default "") ++ " Working For " ++ (vars.Company default "") ]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+	<flow name="sample-pocFlow" doc:id="77fb626b-3629-4799-95f2-1ad26d407a48" >
+		<http:listener doc:name="Listener" doc:id="c11a2c75-6c5c-443a-adb7-da7dc107ccd2" config-ref="HTTP_Listener_config" path="/Democlass4" allowedMethods="POST, GET"/>
+		<ee:transform doc:name="Extract Fields" doc:id="ef30fc0a-1664-448b-a653-ee3dc676cf2a" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="Company" ><![CDATA[%dw 2.0
+output application/java
+---
+attributes.queryParams.Company]]></ee:set-variable>
+				<ee:set-variable variableName="Name" ><![CDATA[%dw 2.0
+output application/java
+---
+payload.Name]]></ee:set-variable>
+				<ee:set-variable variableName="Role" ><![CDATA[%dw 2.0
+output application/java
+---
+payload.Role]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="Private-Flow" doc:id="6818b197-2904-491f-8598-c607e2b0a2e7" name="Private-Flow" />
+		<logger level="INFO" doc:name="Logger" doc:id="16e13bce-f29f-45da-a637-6e4459981199" message="#[payload]"/>
+	</flow>
+	<!-- <flow name="Flow" doc:id="b9aee5ee-7c23-4ce8-bad6-a35e4bed522a" >
+		<http:listener doc:name="Listener" doc:id="6a8071bf-2c2f-4fea-9245-65d874aeaf44" config-ref="HTTP_Listener_config" path="/Democlass4"/>
+		<logger level="INFO" doc:name="Logger" doc:id="fda5967b-f4ea-4968-8567-5f7ae7550e68" message="Started"/>
+		<ee:transform doc:name="Transform Message" doc:id="66befa23-c4a4-4327-bc24-14241d928fb3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+-&#45;&#45;
+{
+	Payload : payload,
+	attributes : attributes,
+	vars : vars
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="2a54833e-83f9-4108-9380-d5a98162952d" message="Completed"/>
+	</flow> -->
+</mule>
